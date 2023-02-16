@@ -43,8 +43,8 @@ public class GameState : MonoBehaviour
     {
         foreach (var block in tiles)
         {
-            _grid[block.posX, block.posY] = new Tuple<BlockData, float>(block, 0f);
-            SetReward(block.posX, block.posY, block.state == TileStates.End ? 1 : 0);
+            _grid[block.PosX, block.PosY] = new Tuple<BlockData, float>(block, 0f);
+            SetReward(block.PosX, block.PosY, block.state == TileStates.End ? 1 : 0);
         }
     }
 

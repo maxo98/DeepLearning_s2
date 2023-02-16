@@ -5,15 +5,15 @@ using UnityEngine;
 
 public class BlockData : MonoBehaviour
 {
-    public int posX;
-    public int posY;
+    public int PosX { get; private set; }
+    public int PosY { get; private set; }
     public TileStates state;
 
     private void Awake()
     {
         var position = gameObject.transform.position;
-        posX = (int)Math.Round(position.x);
-        posY = (int)Math.Round(position.z);
+        PosX = (int)Math.Round(position.x);
+        PosY = (int)Math.Round(position.z);
         state = GameState.TileStateFromTag(gameObject);
     }
 }
