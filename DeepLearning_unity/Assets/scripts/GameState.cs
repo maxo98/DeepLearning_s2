@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-
+using UnityEngine.Experimental.GlobalIllumination;
 
 
 public enum TileStates
 {
+    None,
     Start,
     Obstacle,
     End,
@@ -16,6 +17,7 @@ public enum TileStates
 
 public enum AgentMovements
 {
+    None,
     Up,
     Down,
     Left,
@@ -27,86 +29,101 @@ public class GameState : MonoBehaviour
     [SerializeField] private int gridWidth;
     [SerializeField] private int gridHeight;
     [SerializeField] private GameObject agent;
-    [SerializeField] private List<GameObject> tiles;
-    private float[,] _grid;
+    [SerializeField] private List<BlockData> tiles;
+    private Tuple<BlockData, float>[,] _grid;
+    private Vector2Int _playerPosition;
+
+    private void Start()
+    {
+        _grid = new Tuple<BlockData, float>[gridWidth, gridHeight];
+        InitGameState();
+    }
 
     void InitGameState()
     {
-        var reward = 0;
-        foreach (var go in tiles)
+        foreach (var block in tiles)
         {
-            if (go.CompareTag("End"))
-                reward = 1;
-            var position = go.transform.position;
-            _grid[(int) Math.Round(position.x), (int) Math.Round(position.z)] = reward;
-        }
-        for (var i = 0; i < gridWidth; i++)
-        {
-            for (var j = 0; j < gridHeight; j++)
-            {
-                if (tiles[i + j].CompareTag("End"))
-                    _grid[i, j] = 1;
-                else
-                    _grid[i, j] = 0;
-            }
+            _grid[block.posX, block.posY] = new Tuple<BlockData, float>(block, 0f);
+            SetReward(block.posX, block.posY, block.state == TileStates.End ? 1 : 0);
         }
     }
 
-    public float GetReward(AgentMovements move, int x, int y)
+    public float GetReward(int x, int y)
     {
-        var newPosition = agent.transform.position;
-        switch (move)
-        {
-            case AgentMovements.Left when agent.transform.position.x > 0:
-                newPosition.x--;
-                break;
-            case AgentMovements.Right when agent.transform.position.x < gridWidth - 1:
-                newPosition.x++;
-                break;
-            case AgentMovements.Up when agent.transform.position.z < gridHeight - 1:
-                newPosition.z++;
-                break;
-            case AgentMovements.Down when agent.transform.position.z > 0:
-                newPosition.z--;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(move), move, null);
-        }
+        return _grid[x, y].Item2;
+    }
 
-        if (!tiles[(int)Math.Round(newPosition.x + newPosition.z)].CompareTag("Obstacle"))
-            return _grid[(int)Math.Round(newPosition.x), (int) Math.Round(newPosition.z)];
+    public Vector2Int GetAgentPosition()
+    {
+        return PositionToGrid(agent.transform.position);
+    }
+
+    public Vector2Int MoveAgent(AgentMovements move)
+    {
         var position = agent.transform.position;
-        return _grid[(int)Math.Round(position.x), (int)Math.Round(position.z)];
+        agent.transform.position = CheckMove(move, position);
+        if(CheckGameOver())
+            Debug.Log("Game Over !");
+        return PositionToGrid(position);
     }
 
-    public void MoveAgent(AgentMovements move)
+    Vector3 CheckMove(AgentMovements move, Vector3 position)
     {
-        var newPosition = agent.transform.position;
+        var newPosition = position;
         switch (move)
         {
-            case AgentMovements.Left when agent.transform.position.x > 0:
+            case AgentMovements.Left when newPosition.x > 0:
                 newPosition.x--;
                 break;
-            case AgentMovements.Right when agent.transform.position.x < gridWidth - 1:
+            case AgentMovements.Right when newPosition.x < gridWidth - 1:
                 newPosition.x++;
                 break;
-            case AgentMovements.Up when agent.transform.position.z < gridHeight - 1:
+            case AgentMovements.Up when newPosition.z < gridHeight - 1:
                 newPosition.z++;
                 break;
-            case AgentMovements.Down when agent.transform.position.z > 0:
+            case AgentMovements.Down when newPosition.z > 0:
                 newPosition.z--;
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(move), move, null);
+            case AgentMovements.None:
+                break;
         }
-        if(!tiles[(int) Math.Round(newPosition.x + newPosition.z)].CompareTag("Obstacle"))
-            agent.transform.position = newPosition;
+        var playerPosition = PositionToGrid(newPosition);
+        return _grid[playerPosition.x, playerPosition.y].Item1.state != TileStates.Obstacle ? newPosition : position;
     }
 
     bool CheckGameOver()
     {
-        var position = agent.transform.position;
-        return tiles[(int) Math.Round(position.x + position.z)].CompareTag("End");
+        var position = GetAgentPosition();
+        return _grid[position.x, position.y].Item1.state == TileStates.End;
+    }
+    
+    public static TileStates TileStateFromTag(GameObject tileGo)
+    {
+        if (tileGo.CompareTag("Start"))
+        {
+            return TileStates.Start;
+        }
+        if (tileGo.CompareTag("Obstacle"))
+        {
+            return TileStates.Obstacle;
+        }
+        if (tileGo.CompareTag("End"))
+        {
+            return TileStates.End;
+        }
+        return tileGo.CompareTag("Empty") ? TileStates.Empty : TileStates.None;
+    }
+
+    private Vector2Int PositionToGrid(Vector3 position)
+    {
+        var x = (int)Math.Round(position.x);
+        var y = (int)Math.Round(position.z);
+        return new Vector2Int(x, y);
+    }
+
+    public void SetReward(int x, int y, float reward)
+    {
+        _grid[x, y] = new Tuple<BlockData, float>(_grid[x, y].Item1, reward);
     }
 
 }
