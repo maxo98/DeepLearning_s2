@@ -14,6 +14,6 @@ public class BlockData : MonoBehaviour
         var position = gameObject.transform.position;
         PosX = (int)Math.Round(position.x);
         PosY = (int)Math.Round(position.z);
-        state = GridWorldGameState.TileStateFromTag(gameObject);
+        state = GameStateUtil.TileStateFromTag(gameObject);
     }
 }

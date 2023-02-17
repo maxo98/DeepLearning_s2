@@ -7,8 +7,9 @@ using Random = UnityEngine.Random;
 
 public class MonteCarlo : MonoBehaviour
 {
-    [SerializeField] private GridWorldGameState gameState;
-    
+    [SerializeField] private GameObject gameManager;
+    private IGameState _gameState;
+
     [SerializeField] private bool isExploringStart;
 
     [SerializeField] private bool isEveryVisit;
@@ -31,9 +32,11 @@ public class MonteCarlo : MonoBehaviour
 
     private void Start()
     {
+        _gameState = gameManager.GetComponent<IGameState>();
+        
         SetRandomPolicy();
         if(isExploringStart)
-            gameState.SetRandomGameState();
+            _gameState.SetRandomGameState();
         
         InitReturnAndN();
         InitV();
@@ -52,9 +55,9 @@ public class MonteCarlo : MonoBehaviour
                     break;
             }
             _monteCarloDone = true;
-            for (var x = 0; x < gameState.gridWidth; x++)
+            for (var x = 0; x < _gameState.GetGridWidth(); x++)
             {
-                for (var y = 0; y < gameState.gridHeight; y++)
+                for (var y = 0; y < _gameState.GetGridHeight(); y++)
                 {
                     Debug.Log("x : " + x + " y : " + y + " direction : " + _policy[x, y]);
                 }
@@ -62,7 +65,7 @@ public class MonteCarlo : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Z) && _monteCarloDone)
+        if (Input.GetKeyDown(KeyCode.E) && _monteCarloDone)
         {
             StartCoroutine(MoveAgentFromPolicy());
         }
@@ -70,10 +73,10 @@ public class MonteCarlo : MonoBehaviour
 
     private void InitReturnAndN()
     {
-        _returnsAndNForState = new Dictionary<AgentMovements, Tuple<float, int>>[gameState.gridWidth, gameState.gridHeight];
-        for (var x = 0; x < gameState.gridWidth; x++)
+        _returnsAndNForState = new Dictionary<AgentMovements, Tuple<float, int>>[_gameState.GetGridWidth(), _gameState.GetGridHeight()];
+        for (var x = 0; x < _gameState.GetGridWidth(); x++)
         {
-            for (var y = 0; y < gameState.gridHeight; y++)
+            for (var y = 0; y < _gameState.GetGridHeight(); y++)
             {
                 var dict = new Dictionary<AgentMovements, Tuple<float, int>>();
                 for (var i = 0; i < (int) AgentMovements.Length; i++)
@@ -87,10 +90,10 @@ public class MonteCarlo : MonoBehaviour
 
     private void InitV()
     {
-        _vForState = new Dictionary<AgentMovements, float>[gameState.gridWidth, gameState.gridHeight];
-        for (var x = 0; x < gameState.gridWidth; x++)
+        _vForState = new Dictionary<AgentMovements, float>[_gameState.GetGridWidth(), _gameState.GetGridHeight()];
+        for (var x = 0; x < _gameState.GetGridWidth(); x++)
         {
-            for (var y = 0; y < gameState.gridHeight; y++)
+            for (var y = 0; y < _gameState.GetGridHeight(); y++)
             {
                 var dict = new Dictionary<AgentMovements, float>();
                 for (var i = 0; i < (int) AgentMovements.Length; i++)
@@ -104,10 +107,10 @@ public class MonteCarlo : MonoBehaviour
 
     private void SetRandomPolicy()
     {
-        _policy = new AgentMovements[gameState.gridWidth, gameState.gridHeight];
-        for (var x = 0; x < gameState.gridWidth; x++)
+        _policy = new AgentMovements[_gameState.GetGridWidth(), _gameState.GetGridHeight()];
+        for (var x = 0; x < _gameState.GetGridWidth(); x++)
         {
-            for (var y = 0; y < gameState.gridHeight; y++)
+            for (var y = 0; y < _gameState.GetGridHeight(); y++)
             {
                 _policy[x, y] = GetRandomMove();
             }
@@ -117,9 +120,9 @@ public class MonteCarlo : MonoBehaviour
     private void GenerateNewPolicy()
     {
         _policyIsStable = true;
-        for (var x = 0; x < gameState.gridWidth; x++)
+        for (var x = 0; x < _gameState.GetGridWidth(); x++)
         {
-            for (var y = 0; y < gameState.gridHeight; y++)
+            for (var y = 0; y < _gameState.GetGridHeight(); y++)
             {
                 var maxValue = 0f;
                 var curMove = AgentMovements.Up;
@@ -146,7 +149,7 @@ public class MonteCarlo : MonoBehaviour
             var r = Mathf.Max((maxEpochs - epochs) / maxEpochs, 0);
             var epsilon = r * (EpsilonStart - EpsilonEnd) + EpsilonEnd;
             var G = 0f;
-            var currentGameState = gameState.GetAgentPosition();
+            var currentGameState = _gameState.GetAgentPosition();
 
             var generation = new List<Tuple<AgentMovements, int, int>>();
             
@@ -158,8 +161,8 @@ public class MonteCarlo : MonoBehaviour
                 else 
                     currentMove = _policy[currentGameState.x, currentGameState.y];
                 generation.Add(new Tuple<AgentMovements, int, int>(currentMove, currentGameState.x, currentGameState.y));
-                currentGameState = gameState.CheckMove(currentMove, currentGameState);
-                if (!gameState.CheckGameOver(currentGameState.x, currentGameState.y)) continue;
+                currentGameState = _gameState.CheckMove(currentMove, currentGameState);
+                if (!_gameState.CheckGameOver(currentGameState.x, currentGameState.y)) continue;
                 generation.Add(new Tuple<AgentMovements, int, int>(currentMove, currentGameState.x, currentGameState.y));
                 break;
             }
@@ -167,15 +170,15 @@ public class MonteCarlo : MonoBehaviour
             {
                 var action = generation[t];
                 var actionValues = _returnsAndNForState[action.Item2, action.Item3][action.Item1];
-                G += gameState.GetReward(generation[t+1].Item2, generation[t+1].Item3);
+                G += _gameState.GetReward(generation[t+1].Item2, generation[t+1].Item3);
                 var returnAndN = new Tuple<float, int>(actionValues.Item1 + G, actionValues.Item2 + 1);
                 _returnsAndNForState[generation[t].Item2, generation[t].Item3][generation[t].Item1] = returnAndN;
             }
         }
 
-        for (var x = 0; x < gameState.gridWidth; x++)
+        for (var x = 0; x < _gameState.GetGridWidth(); x++)
         {
-            for (var y = 0; y < gameState.gridHeight; y++)
+            for (var y = 0; y < _gameState.GetGridHeight(); y++)
             {
                 for (var i = 0; i < (int) AgentMovements.Length; i++)
                 {
@@ -198,10 +201,10 @@ public class MonteCarlo : MonoBehaviour
         for (var i = 0; i < maxMovements; i++)
         {
             yield return new WaitForSeconds(0.5f);
-            var position = gameState.GetAgentPosition();
+            var position = _gameState.GetAgentPosition();
             var move = _policy[position.x, position.y];
-            position = gameState.MoveAgent(move);
-            if (gameState.CheckGameOver(position.x, position.y))
+            position = _gameState.MoveAgent(move);
+            if (_gameState.CheckGameOver(position.x, position.y))
                 break;
         }
 

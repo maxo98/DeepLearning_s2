@@ -4,25 +4,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 
-public enum BlockStates
-{
-    None,
-    Start,
-    Obstacle,
-    End,
-    Empty
-}
-
-public enum AgentMovements
-{
-    Up,
-    Down,
-    Left,
-    Right,
-    Length
-}
-
-public class GridWorldGameState : MonoBehaviour
+public class GridWorldGameState : MonoBehaviour, IGameState
 {
     public int gridWidth;
     public int gridHeight;
@@ -61,12 +43,12 @@ public class GridWorldGameState : MonoBehaviour
 
     public Vector2Int GetAgentPosition()
     {
-        return PositionToGrid(agent.transform.position);
+        return GameStateUtil.PositionToGrid(agent.transform.position);
     }
 
     public Vector2Int MoveAgent(AgentMovements move)
     {
-        var position = PositionToGrid(agent.transform.position);
+        var position = GameStateUtil.PositionToGrid(agent.transform.position);
         agent.transform.position = GridToAgentPosition(CheckMove(move, position));
         if(CheckGameOver(position.x, position.y))
             Debug.Log("Game Over !");
@@ -101,30 +83,6 @@ public class GridWorldGameState : MonoBehaviour
     {
         return _grid[x, y].Item1.state == BlockStates.End;
     }
-    
-    public static BlockStates TileStateFromTag(GameObject tileGo)
-    {
-        if (tileGo.CompareTag("Start"))
-        {
-            return BlockStates.Start;
-        }
-        if (tileGo.CompareTag("Obstacle"))
-        {
-            return BlockStates.Obstacle;
-        }
-        if (tileGo.CompareTag("End"))
-        {
-            return BlockStates.End;
-        }
-        return tileGo.CompareTag("Empty") ? BlockStates.Empty : BlockStates.None;
-    }
-
-    private Vector2Int PositionToGrid(Vector3 position)
-    {
-        var x = (int)Math.Round(position.x);
-        var y = (int)Math.Round(position.z);
-        return new Vector2Int(x, y);
-    }
 
     private Vector3 GridToAgentPosition(Vector2Int position)
     {
@@ -133,8 +91,8 @@ public class GridWorldGameState : MonoBehaviour
 
     public void SetRandomGameState()
     {
-        var x = 0;
-        var y = 0;
+        int x;
+        int y;
         do
         {
             x = Random.Range(0, gridWidth);
@@ -143,4 +101,13 @@ public class GridWorldGameState : MonoBehaviour
         agent.transform.position = new Vector3(x, 0.75f, y);
     }
 
+    public int GetGridWidth()
+    {
+        return gridWidth;
+    }
+
+    public int GetGridHeight()
+    {
+        return gridHeight;
+    }
 }

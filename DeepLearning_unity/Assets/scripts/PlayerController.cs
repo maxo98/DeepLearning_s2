@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public GridWorldGameState gameState;
+    public IGameState gameState;
     
     // Update is called once per frame
     void Update()
