@@ -11,14 +11,16 @@ public class GridWorldGameState : MonoBehaviour, IGameState
     [SerializeField] private GameObject agent;
     [SerializeField] private List<BlockData> tiles;
     private Tuple<BlockData, float>[,] _grid;
+    private State _state;
 
     private void Start()
     {
         _grid = new Tuple<BlockData, float>[gridWidth, gridHeight];
-        InitGameState();
+        _state = new State(agent.transform.position);
+        InitGrid();
     }
 
-    private void InitGameState()
+    public void InitGrid()
     {
         foreach (var block in tiles)
         {
@@ -26,9 +28,9 @@ public class GridWorldGameState : MonoBehaviour, IGameState
         }
     }
 
-    public float GetReward(int x, int y)
+    public float GetReward(State state)
     {
-        return _grid[x, y].Item2;
+        return _grid[state.AgentPosition.x, state.AgentPosition.y].Item2;
     }
     
     public void SetReward(int x, int y, float reward)
@@ -46,18 +48,18 @@ public class GridWorldGameState : MonoBehaviour, IGameState
         return GameStateUtil.PositionToGrid(agent.transform.position);
     }
 
-    public Vector2Int MoveAgent(AgentMovements move)
+    public State MoveAgent(AgentMovements move)
     {
-        var position = GameStateUtil.PositionToGrid(agent.transform.position);
-        agent.transform.position = GridToAgentPosition(CheckMove(move, position));
-        if(CheckGameOver(position.x, position.y))
+        _state = CheckMove(move,  _state);
+        agent.transform.position = GameStateUtil.GridToAgentPosition(_state.AgentPosition, agent.transform.position.y);
+        if(CheckGameOver(_state))
             Debug.Log("Game Over !");
-        return position;
+        return _state;
     }
 
-    public Vector2Int CheckMove(AgentMovements move, Vector2Int position)
+    public State CheckMove(AgentMovements move, State state)
     {
-        var newPosition = position;
+        var newPosition = state.AgentPosition;
         switch (move)
         {
             case AgentMovements.Left when newPosition.x > 0:
@@ -72,21 +74,21 @@ public class GridWorldGameState : MonoBehaviour, IGameState
             case AgentMovements.Down when newPosition.y > 0:
                 newPosition.y--;
                 break;
+            case AgentMovements.Length:
             default:
-                return position;
+                return state;
         }
-        var playerPosition = newPosition;
-        return _grid[playerPosition.x, playerPosition.y].Item1.state != BlockStates.Obstacle ? newPosition : position;
+        var playerPosition = state.AgentPosition;
+        if (_grid[newPosition.x, newPosition.y].Item1.state != BlockStates.Obstacle)
+        {
+            playerPosition = newPosition;
+        }
+        return new State(playerPosition);
     }
 
-    public bool CheckGameOver(int x, int y)
+    public bool CheckGameOver(State state)
     {
-        return _grid[x, y].Item1.state == BlockStates.End;
-    }
-
-    private Vector3 GridToAgentPosition(Vector2Int position)
-    {
-        return new Vector3(position.x, agent.transform.position.y, position.y);
+        return _grid[state.AgentPosition.x, state.AgentPosition.y].Item1.state == BlockStates.End;
     }
 
     public void SetRandomGameState()
@@ -99,6 +101,17 @@ public class GridWorldGameState : MonoBehaviour, IGameState
             y = Random.Range(0, gridHeight);
         } while (_grid[x, y].Item1.state != BlockStates.Empty && _grid[x, y].Item1.state != BlockStates.Start);
         agent.transform.position = new Vector3(x, 0.75f, y);
+    }
+
+    public List<State> GetAllStates()
+    {
+        var list = new List<State> { _state };
+        return list;
+    }
+
+    public State GetState()
+    {
+        return _state;
     }
 
     public int GetGridWidth()

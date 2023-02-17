@@ -6929,6 +6929,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b25d9d520ceeb845a7591f4fe90eeff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameManager: {fileID: 1395844934}
   isExploringStart: 0
   isEveryVisit: 1
   maxEpochs: 1000
@@ -7344,6 +7345,10 @@ PrefabInstance:
       propertyPath: gameState
       value: 
       objectReference: {fileID: 1395844937}
+    - target: {fileID: 4747222841513364348, guid: cbcbc9843f1f8c74caa33c8860cda5c4, type: 3}
+      propertyPath: gameManagerGo
+      value: 
+      objectReference: {fileID: 1395844934}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cbcbc9843f1f8c74caa33c8860cda5c4, type: 3}
 --- !u!1001 &6246667637960941876

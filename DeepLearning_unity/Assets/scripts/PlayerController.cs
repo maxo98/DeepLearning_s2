@@ -1,21 +1,28 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public IGameState gameState;
-    
+    [SerializeField] private GameObject gameManagerGo;
+    private IGameState _gameState;
+
+    private void Start()
+    {
+        _gameState = gameManagerGo.GetComponent<IGameState>();
+    }
+
     // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Z))
-            gameState.MoveAgent(AgentMovements.Up);
+            _gameState.MoveAgent(AgentMovements.Up);
         if (Input.GetKeyDown(KeyCode.S))
-            gameState.MoveAgent(AgentMovements.Down);
+            _gameState.MoveAgent(AgentMovements.Down);
         if (Input.GetKeyDown(KeyCode.Q))
-            gameState.MoveAgent(AgentMovements.Left);
+            _gameState.MoveAgent(AgentMovements.Left);
         if (Input.GetKeyDown(KeyCode.D))
-            gameState.MoveAgent(AgentMovements.Right);
+            _gameState.MoveAgent(AgentMovements.Right);
     }
 }

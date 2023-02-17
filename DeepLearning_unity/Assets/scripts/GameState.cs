@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum BlockStates
@@ -18,20 +19,56 @@ public enum AgentMovements
     Right,
     Length
 }
+
+public class State
+{
+    public Vector2Int AgentPosition { get; protected set; }
+
+    public State(Vector3 agent)
+    {
+        AgentPosition = GameStateUtil.PositionToGrid(agent);
+    }
+
+    public State(Vector2Int agent)
+    {
+        AgentPosition = agent;
+    }
+    
+    public void SetAgentPosition(int x, int y)
+    {
+        AgentPosition = new Vector2Int(x, y);
+    }
+    
+    public void SetAgentPosition(Vector3 agent)
+    {
+        AgentPosition = GameStateUtil.PositionToGrid(agent);
+    }
+    
+    public void SetAgentPosition(Vector2Int agent)
+    {
+        AgentPosition = agent;
+    }
+}
     
 public interface IGameState
 {
-    float GetReward(int x, int y);
+    public void InitGrid();
+    
+    float GetReward(State state);
     
     Vector2Int GetAgentPosition();
     
-    Vector2Int MoveAgent(AgentMovements move);
+    State MoveAgent(AgentMovements move);
     
-    Vector2Int CheckMove(AgentMovements move, Vector2Int position);
+    State CheckMove(AgentMovements move, State state);
     
-    bool CheckGameOver(int x, int y);
+    bool CheckGameOver(State state);
 
     void SetRandomGameState();
+
+    public List<State> GetAllStates();
+
+    State GetState();
 
     int GetGridWidth();
 
@@ -62,5 +99,10 @@ public static class GameStateUtil
         var x = (int)Math.Round(position.x);
         var y = (int)Math.Round(position.z);
         return new Vector2Int(x, y);
+    }
+    
+    public static Vector3 GridToAgentPosition(Vector2Int position, float height)
+    {
+        return new Vector3(position.x, height, position.y);
     }
 }
