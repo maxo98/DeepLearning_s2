@@ -48,6 +48,11 @@ public class State
     {
         AgentPosition = agent;
     }
+
+    public bool Equals(State state)
+    {
+        return AgentPosition.x == state.AgentPosition.x && AgentPosition.y == state.AgentPosition.y;
+    }
 }
     
 public interface IGameState
@@ -69,10 +74,6 @@ public interface IGameState
     public List<State> GetAllStates();
 
     State GetState();
-
-    int GetGridWidth();
-
-    int GetGridHeight();
 }
 
 public static class GameStateUtil

@@ -113,14 +113,4 @@ public class GridWorldGameState : MonoBehaviour, IGameState
     {
         return _state;
     }
-
-    public int GetGridWidth()
-    {
-        return gridWidth;
-    }
-
-    public int GetGridHeight()
-    {
-        return gridHeight;
-    }
 }

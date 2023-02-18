@@ -1,8 +1,27 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 using Random = UnityEngine.Random;
+
+public struct MonteCarloStruct
+{
+    public State State { get; }
+    public readonly float[] ReturnsForState;
+    public readonly int[] NForState;
+    public readonly float[] VsForState;
+
+    public MonteCarloStruct(State state)
+    {
+        State = state;
+        const int nbMoves = (int)AgentMovements.Length;
+        ReturnsForState = new float[nbMoves];
+        NForState = new int[nbMoves];
+        VsForState = new float[nbMoves];
+    }
+}
 
 
 public class MonteCarlo : MonoBehaviour
@@ -21,12 +40,10 @@ public class MonteCarlo : MonoBehaviour
     private const float EpsilonStart = 0.7f;
     private const float EpsilonEnd = 0.1f;
 
-    private Dictionary<State, AgentMovements> _policy;
-    private Dictionary<State, Dictionary<AgentMovements, Tuple<float, int>>> _returnsAndNForState;
-    private Dictionary<State, Dictionary<AgentMovements, float>> _vForState;
-
+    private List<State> _states;
     private List<Tuple<State, AgentMovements>> _generation;
-    private List<State> states;
+    private List<Tuple<State, AgentMovements>> _policy;
+    private List<MonteCarloStruct> _genResults;
 
     private bool _policyIsStable;
     private bool _monteCarloDone;
@@ -38,8 +55,6 @@ public class MonteCarlo : MonoBehaviour
         InitRandomPolicy();
         if(isExploringStart)
             _gameState.SetRandomGameState();
-        InitReturnAndN();
-        InitV();
     }
 
     private void Update()
@@ -55,7 +70,7 @@ public class MonteCarlo : MonoBehaviour
                 if (_policyIsStable)
                     break;
             }
-            
+            Debug.Log("Iterations done");
             _monteCarloDone = true;
         }
 
@@ -67,49 +82,104 @@ public class MonteCarlo : MonoBehaviour
 
     private void InitStates()
     {
-        states = new List<State>();
-    }
-
-    private void InitReturnAndN()
-    {
-        _returnsAndNForState = new Dictionary<State, Dictionary<AgentMovements, Tuple<float, int>>>();
-    }
-
-    private void InitV()
-    {
-        _vForState = new Dictionary<State, Dictionary<AgentMovements, float>>();
+        _states = new List<State> { _gameState.GetState() };
+        _generation = new List<Tuple<State, AgentMovements>>();
+        _genResults = new List<MonteCarloStruct> { new (_states[0]) };
     }
 
     private void InitRandomPolicy()
     {
-        _policy = new Dictionary<State, AgentMovements> { { _gameState.GetState(), GetRandomMove() } };
+        _policy = new List<Tuple<State, AgentMovements>> { new (_states[0], GetRandomMove()) };
+    }
+    
+    private void AddState(State state)
+    {
+        if (_states.Any(result => result.Equals(state)))
+        {
+            return;
+        }
+        _states.Add(state);
+    }
+
+    private void CheckStateInResultList(State state)
+    {
+        if (_genResults.Any(result => result.State.Equals(state)))
+        {
+            return;
+        }
+        _genResults.Add(new MonteCarloStruct(state));
+    }
+
+    private MonteCarloStruct GetResultsFromState(State state)
+    {
+        foreach (var result in _genResults.Where(result => result.State.Equals(state)))
+        {
+            return result;
+        }
+        return new MonteCarloStruct(state);
+    }
+
+    private void UpdateVsForStateAndMove(State state, AgentMovements move)
+    {
+        var result = GetResultsFromState(state);
+        var returns = result.ReturnsForState[(int) move];
+        var n = result.NForState[(int) move];
+        if (n == 0) n = 1;
+        result.VsForState[(int) move] = returns / n;
+    }
+
+    private void ClearResults()
+    {
+        foreach (var result in _genResults)
+        {
+            for (var i = 0; i < (int)AgentMovements.Length; i++)
+            {
+                result.ReturnsForState[i] = 0f;
+                result.NForState[i] = 0;
+                result.VsForState[i] = 0;
+            }
+        }
+    }
+
+    private AgentMovements GetMovementFromPolicy(State state)
+    {
+        foreach (var (policyState, move) in _policy)
+        {
+            if (!policyState.Equals(state)) continue;
+            return move;
+        }
+
+        var newPolicy = new Tuple<State, AgentMovements>(state, GetRandomMove());
+        _policy.Add(newPolicy);
+        return newPolicy.Item2;
     }
 
     private void GenerateNewPolicy()
     {
         _policyIsStable = true;
-        var maxValue = 0f;
-        var curMove = AgentMovements.Up;
-        foreach (var state in states)
+        foreach (var state in _states)
         {
+            var maxValue = 0f;
+            var curMove = AgentMovements.Up;
+            var result = GetResultsFromState(state);
             for (var i = 0; i < (int) AgentMovements.Length; i++)
             {
-                if (!_vForState.ContainsKey(state)) continue;
-                if (!_vForState[state].ContainsKey((AgentMovements) i)) continue;
-                var curVal = _vForState[state][(AgentMovements) i];
-                if (!(curVal > maxValue)) continue;
+                var curVal = result.VsForState[i];
+                if (curVal < maxValue) continue;
                 maxValue = curVal;
                 curMove = (AgentMovements) i;
             }
+            for(var i = 0; i < _policy.Count; i++)
+            {
+                var (policyState, move) = _policy[i];
+                if (!policyState.Equals(state)) continue;
+                if (move == curMove) break;
+                _policyIsStable = false;
+                _policy[i] = new Tuple<State, AgentMovements>(policyState, curMove);
+                break;
+            }
         }
-
-        foreach (var state in states)
-        {
-            if (!_policy.ContainsKey(state)) continue;
-            if (_policy[state] == curMove) continue;
-            _policyIsStable = false;
-            _policy[state] = curMove;
-        }
+        ClearResults();
     }
 
     private void EveryVisitMcPrediction()
@@ -118,74 +188,49 @@ public class MonteCarlo : MonoBehaviour
         
         for (; epochs < maxEpochs; epochs++)
         {
+            _generation.Clear();
             var r = Mathf.Max((maxEpochs - epochs) / maxEpochs, 0);
             var epsilon = r * (EpsilonStart - EpsilonEnd) + EpsilonEnd;
-            var G = 0f;
+            var g = 0f;
             var currentGameState = _gameState.GetState();
-
-            var generation = new List<Tuple<State, AgentMovements>>();
-            
             for (var i = 0; i < maxMovements; i++)
             {
-                if(!states.Contains(currentGameState))
-                    states.Add(currentGameState);
                 AgentMovements currentMove;
                 if (Random.Range(0f, 1f) > epsilon)
                     currentMove = GetRandomMove();
                 else
                 {
-                    if (_policy.ContainsKey(currentGameState))
-                    {
-                        currentMove = _policy[currentGameState];
-                    }
-                    else
-                    {
-                        _policy.Add(currentGameState,GetRandomMove());
-                        currentMove = _policy[currentGameState];
-                    }
+                    currentMove = GetMovementFromPolicy(currentGameState);
                 }
-
-                generation.Add(new Tuple<State, AgentMovements>(currentGameState, currentMove));
+                _generation.Add(new Tuple<State, AgentMovements>(currentGameState, currentMove));
+                CheckStateInResultList(currentGameState);
+                AddState(currentGameState);
                 currentGameState = _gameState.CheckMove(currentMove, currentGameState);
+                
                 if (!_gameState.CheckGameOver(currentGameState)) continue;
-                generation.Add(new Tuple<State, AgentMovements>(currentGameState, currentMove));
+                _generation.Add(new Tuple<State, AgentMovements>(currentGameState, currentMove));
+                CheckStateInResultList(currentGameState);
+                AddState(currentGameState);
                 break;
             }
-            for (var t = generation.Count - 2; t >= 0; t--)
+            for (var t = _generation.Count - 2; t >= 0; t--)
             {
-                var (state, move) = generation[t];
-                if (!_returnsAndNForState.ContainsKey(state))
-                {
-                    _returnsAndNForState.Add(state, new Dictionary<AgentMovements, Tuple<float, int>>());
-                }
-                if (!_returnsAndNForState[state].ContainsKey(move))
-                {
-                    _returnsAndNForState[state].Add(move, new Tuple<float, int>(0f, 0));
-                }
-                var (returns, n) = _returnsAndNForState[state][move];
-                G += _gameState.GetReward(generation[t+1].Item1);
-                var returnAndN = new Tuple<float, int>(returns + G, n + 1);
-                _returnsAndNForState[state][move] = returnAndN;
+                var (state, move) = _generation[t];
+                var result = GetResultsFromState(state);
+                var indexMove = (int)move;
+                var returns = result.ReturnsForState[indexMove];
+                var n = result.NForState[indexMove];
+                g += _gameState.GetReward(_generation[t+1].Item1);
+                result.ReturnsForState[indexMove] = g + returns;
+                result.NForState[indexMove] = n+1;
             }
         }
 
-        foreach (var state in states)
+        foreach (var state in _states)
         {
             for (var i = 0; i < (int) AgentMovements.Length; i++)
             {
-                if (!_returnsAndNForState.ContainsKey(state))
-                {
-                    _returnsAndNForState.Add(state, new Dictionary<AgentMovements, Tuple<float, int>>());
-                }
-                if (!_returnsAndNForState[state].ContainsKey((AgentMovements)i))
-                {
-                    _returnsAndNForState[state].Add((AgentMovements)i, new Tuple<float, int>(0f, 0));
-                }
-                var (returns, n) = _returnsAndNForState[state][(AgentMovements)i];
-                if (n != 0)
-                    _vForState[state][(AgentMovements)i] = returns / n;
-                else
-                    _vForState[state][(AgentMovements)i] = returns;
+                UpdateVsForStateAndMove(state, (AgentMovements) i);
             }
         }
     }
@@ -198,15 +243,18 @@ public class MonteCarlo : MonoBehaviour
     private IEnumerator MoveAgentFromPolicy()
     {
         var state = _gameState.GetState();
+        var win = false;
         for (var i = 0; i < maxMovements; i++)
         {
             yield return new WaitForSeconds(0.5f);
-            var move = _policy[state];
+            var move = GetMovementFromPolicy(state);
             state = _gameState.MoveAgent(move);
-            if (_gameState.CheckGameOver(state))
-                break;
+            if (!_gameState.CheckGameOver(state)) continue;
+            win = true;
+            break;
         }
-
+        if(!win)
+            Debug.Log("Looser !");
         yield return null;
     }
 

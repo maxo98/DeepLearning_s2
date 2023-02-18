@@ -18,6 +18,18 @@ public class SokobanState : State
         }
     }
 
+    public new bool Equals(State state)
+    {
+        var sokobanState = (SokobanState)state;
+        if (AgentPosition.x != state.AgentPosition.x || AgentPosition.y != state.AgentPosition.y) return false;
+        if (_cratesPosition.Count != sokobanState._cratesPosition.Count) return false;
+        for (var i = 0; i < _cratesPosition.Count; i++)
+        {
+            if (!_cratesPosition[i].Equals(sokobanState._cratesPosition[i])) return false;
+        }
+        return true;
+    }
+
     public SokobanState(SokobanState state) : base(state.AgentPosition)
     {
         _cratesPosition = state._cratesPosition;
@@ -230,15 +242,5 @@ public class SokobanGameState : MonoBehaviour, IGameState
     public State GetState()
     {
         return _state;
-    }
-
-    public int GetGridWidth()
-    {
-        return gridWidth;
-    }
-
-    public int GetGridHeight()
-    {
-        return gridHeight;
     }
 }
