@@ -113,4 +113,14 @@ public class GridWorldGameState : MonoBehaviour, IGameState
     {
         return _state;
     }
+
+    public State CopyState(State state)
+    {
+        return new State(state);
+    }
+
+    public bool CompareStates(State state1, State state2)
+    {
+        return state1.Equals(state2);
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using UnityEngine;
 
 public enum BlockStates
@@ -31,9 +32,14 @@ public class State
 
     public State(Vector2Int agent)
     {
-        AgentPosition = agent;
+        AgentPosition = new Vector2Int(agent.x, agent.y);
     }
-    
+
+    public State(State state)
+    {
+        AgentPosition = state.AgentPosition;
+    }
+
     public void SetAgentPosition(int x, int y)
     {
         AgentPosition = new Vector2Int(x, y);
@@ -74,6 +80,10 @@ public interface IGameState
     public List<State> GetAllStates();
 
     State GetState();
+
+    State CopyState(State state);
+
+    bool CompareStates(State state1, State state2);
 }
 
 public static class GameStateUtil

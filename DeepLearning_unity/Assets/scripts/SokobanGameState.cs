@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class SokobanState : State
 {
@@ -10,11 +9,19 @@ public class SokobanState : State
 
     public SokobanState(Vector3 agent,IReadOnlyCollection<GameObject> crates) : base(agent)
     {
-        AgentPosition = GameStateUtil.PositionToGrid(agent);
         _cratesPosition = new List<Vector2Int>(crates.Count);
         foreach (var position in crates.Select(crate => crate.transform.position))
         {
             _cratesPosition.Add(GameStateUtil.PositionToGrid(position));
+        }
+    }
+    
+    public SokobanState(SokobanState state) : base(state)
+    {
+        _cratesPosition = new List<Vector2Int>(state._cratesPosition.Count);
+        foreach (var cratePosition in state._cratesPosition)
+        {
+            _cratesPosition.Add(new Vector2Int(cratePosition.x , cratePosition.y));
         }
     }
 
@@ -29,11 +36,7 @@ public class SokobanState : State
         }
         return true;
     }
-
-    public SokobanState(SokobanState state) : base(state.AgentPosition)
-    {
-        _cratesPosition = state._cratesPosition;
-    }
+    
     public int GetCratesCount()
     {
         return _cratesPosition.Count;
@@ -135,6 +138,7 @@ public class SokobanGameState : MonoBehaviour, IGameState
 
     public State CheckMove(AgentMovements move, State state)
     {
+        var newState = CopyState(state);
         var newPosition = state.AgentPosition;
         switch (move)
         {
@@ -161,11 +165,11 @@ public class SokobanGameState : MonoBehaviour, IGameState
                 Debug.LogError("default : ne devrait pas passer ici");
                 break;
         }
-        if (_grid[newPosition.x, newPosition.y].Item1.state != BlockStates.Obstacle && CanMoveCrate(move, (SokobanState)state, newPosition))
+        if (_grid[newPosition.x, newPosition.y].Item1.state != BlockStates.Obstacle && CanMoveCrate(move, (SokobanState)newState, newPosition))
         {
-            state.SetAgentPosition(newPosition);
+            newState.SetAgentPosition(newPosition);
         }
-        return state;
+        return newState;
     }
 
     private bool CanMoveCrate(AgentMovements move, SokobanState sokobanState, Vector2Int playerPosition)
@@ -242,5 +246,16 @@ public class SokobanGameState : MonoBehaviour, IGameState
     public State GetState()
     {
         return _state;
+    }
+
+    public State CopyState(State state)
+    {
+        return new SokobanState((SokobanState)state);
+    }
+
+    public bool CompareStates(State state1, State state2)
+    {
+        var sokobanState1 = (SokobanState)state1;
+        return sokobanState1.Equals((SokobanState)state2);
     }
 }

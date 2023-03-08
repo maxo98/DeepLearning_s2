@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.AI;
 using Random = UnityEngine.Random;
 
 public struct MonteCarloStruct
@@ -37,7 +36,7 @@ public class MonteCarlo : MonoBehaviour
     [SerializeField] private  int maxMovements = 100;
     [SerializeField] private  int maxIteration = 50;
 
-    private const float EpsilonStart = 0.7f;
+    private const float EpsilonStart = 0.5f;
     private const float EpsilonEnd = 0.1f;
 
     private List<State> _states;
@@ -51,8 +50,7 @@ public class MonteCarlo : MonoBehaviour
     private void Start()
     {
         _gameState = gameManager.GetComponent<IGameState>();
-        InitStates();
-        InitRandomPolicy();
+        
         if(isExploringStart)
             _gameState.SetRandomGameState();
     }
@@ -61,8 +59,10 @@ public class MonteCarlo : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.A))
         {
+            InitStates();
+            InitRandomPolicy();
             _monteCarloDone = false;
-            for (var i = 0; i < maxIteration; i++)
+            for (var i = 1; i <= maxIteration; i++)
             {
                 Debug.Log("iteration : " + i);
                 EveryVisitMcPrediction();
@@ -82,28 +82,28 @@ public class MonteCarlo : MonoBehaviour
 
     private void InitStates()
     {
-        _states = new List<State> { _gameState.GetState() };
+        _states = new List<State> { _gameState.CopyState(_gameState.GetState()) };
         _generation = new List<Tuple<State, AgentMovements>>();
-        _genResults = new List<MonteCarloStruct> { new (_states[0]) };
+        _genResults = new List<MonteCarloStruct> { new (_gameState.CopyState(_states[0])) };
     }
 
     private void InitRandomPolicy()
     {
-        _policy = new List<Tuple<State, AgentMovements>> { new (_states[0], GetRandomMove()) };
+        _policy = new List<Tuple<State, AgentMovements>> { new (_gameState.CopyState(_states[0]), GetRandomMove()) };
     }
     
     private void AddState(State state)
     {
-        if (_states.Any(result => result.Equals(state)))
+        if (_states.Any(result => _gameState.CompareStates(result, state)))
         {
             return;
         }
-        _states.Add(state);
+        _states.Add(_gameState.CopyState(state));
     }
 
     private void CheckStateInResultList(State state)
     {
-        if (_genResults.Any(result => result.State.Equals(state)))
+        if (_genResults.Any(result => _gameState.CompareStates(result.State, state)))
         {
             return;
         }
@@ -112,7 +112,7 @@ public class MonteCarlo : MonoBehaviour
 
     private MonteCarloStruct GetResultsFromState(State state)
     {
-        foreach (var result in _genResults.Where(result => result.State.Equals(state)))
+        foreach (var result in _genResults.Where(result => _gameState.CompareStates(result.State,state)))
         {
             return result;
         }
@@ -145,11 +145,11 @@ public class MonteCarlo : MonoBehaviour
     {
         foreach (var (policyState, move) in _policy)
         {
-            if (!policyState.Equals(state)) continue;
+            if (!_gameState.CompareStates(policyState, state)) continue;
             return move;
         }
 
-        var newPolicy = new Tuple<State, AgentMovements>(state, GetRandomMove());
+        var newPolicy = new Tuple<State, AgentMovements>(_gameState.CopyState(state), GetRandomMove());
         _policy.Add(newPolicy);
         return newPolicy.Item2;
     }
@@ -172,7 +172,7 @@ public class MonteCarlo : MonoBehaviour
             for(var i = 0; i < _policy.Count; i++)
             {
                 var (policyState, move) = _policy[i];
-                if (!policyState.Equals(state)) continue;
+                if (!_gameState.CompareStates(policyState, state)) continue;
                 if (move == curMove) break;
                 _policyIsStable = false;
                 _policy[i] = new Tuple<State, AgentMovements>(policyState, curMove);
@@ -202,13 +202,13 @@ public class MonteCarlo : MonoBehaviour
                 {
                     currentMove = GetMovementFromPolicy(currentGameState);
                 }
-                _generation.Add(new Tuple<State, AgentMovements>(currentGameState, currentMove));
+                _generation.Add(new Tuple<State, AgentMovements>(_gameState.CopyState(currentGameState), currentMove));
                 CheckStateInResultList(currentGameState);
                 AddState(currentGameState);
                 currentGameState = _gameState.CheckMove(currentMove, currentGameState);
                 
                 if (!_gameState.CheckGameOver(currentGameState)) continue;
-                _generation.Add(new Tuple<State, AgentMovements>(currentGameState, currentMove));
+                _generation.Add(new Tuple<State, AgentMovements>(_gameState.CopyState(currentGameState), currentMove));
                 CheckStateInResultList(currentGameState);
                 AddState(currentGameState);
                 break;
