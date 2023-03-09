@@ -65,8 +65,8 @@ public interface IGameState
 {
     public void InitGrid();
     
-    float GetReward(State state);
-    
+    float GetReward(State state, State otherState);
+
     Vector2Int GetAgentPosition();
     
     State MoveAgent(AgentMovements move);

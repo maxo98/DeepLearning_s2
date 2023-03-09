@@ -28,7 +28,7 @@ public class GridWorldGameState : MonoBehaviour, IGameState
         }
     }
 
-    public float GetReward(State state)
+    public float GetReward(State state, State otherState)
     {
         return _grid[state.AgentPosition.x, state.AgentPosition.y].Item2;
     }

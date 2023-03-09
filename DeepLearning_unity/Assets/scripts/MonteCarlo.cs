@@ -220,7 +220,7 @@ public class MonteCarlo : MonoBehaviour
                 var indexMove = (int)move;
                 var returns = result.ReturnsForState[indexMove];
                 var n = result.NForState[indexMove];
-                g += _gameState.GetReward(_generation[t+1].Item1);
+                g += _gameState.GetReward(_generation[t+1].Item1, _generation[t].Item1);
                 result.ReturnsForState[indexMove] = g + returns;
                 result.NForState[indexMove] = n+1;
             }

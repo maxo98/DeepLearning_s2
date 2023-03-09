@@ -84,8 +84,12 @@ public class SokobanGameState : MonoBehaviour, IGameState
         }
     }
 
-    public float GetReward(State state)
+    public float GetReward(State state, State otherState)
     {
+        if (CompareStates(state, otherState))
+            return 0f;
+        if (CompareCrates(state, otherState))
+            return 0f;
         var sokobanState = (SokobanState)state;
         var reward = 0f;
         for(var i = 0; i < sokobanState.GetCratesCount(); i++)
@@ -258,4 +262,19 @@ public class SokobanGameState : MonoBehaviour, IGameState
         var sokobanState1 = (SokobanState)state1;
         return sokobanState1.Equals((SokobanState)state2);
     }
+    
+    public bool CompareCrates(State state1, State state2)
+    {
+        var sokobanState1 = (SokobanState)state1;
+        var sokobanState2 = (SokobanState)state2;
+        for (var i = 0; i < sokobanState1.GetCratesCount(); i++)
+        {
+            if (!sokobanState1.GetCratePosition(i).Equals(sokobanState2.GetCratePosition(i)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
 }
