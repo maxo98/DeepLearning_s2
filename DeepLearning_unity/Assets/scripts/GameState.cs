@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using UnityEngine;
+using Random = System.Random;
 
 public enum BlockStates
 {
@@ -115,5 +116,15 @@ public static class GameStateUtil
     public static Vector3 GridToAgentPosition(Vector2Int position, float height)
     {
         return new Vector3(position.x, height, position.y);
+    }
+
+    public static void ShuffleArray<T>(this Random rng, T[] array)
+    {
+        var n = array.Length;
+        while (n > 1) 
+        {
+            var k = rng.Next(n--);
+            (array[n], array[k]) = (array[k], array[n]);
+        }
     }
 }

@@ -4701,7 +4701,7 @@ MonoBehaviour:
   gameManager: {fileID: 1395844934}
   isExploringStart: 0
   isEveryVisit: 1
-  maxEpochs: 2000
+  maxEpochs: 1200
   maxMovements: 100
   maxIteration: 50
 --- !u!4 &2059034887

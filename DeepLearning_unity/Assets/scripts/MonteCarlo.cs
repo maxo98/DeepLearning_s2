@@ -46,6 +46,8 @@ public class MonteCarlo : MonoBehaviour
 
     private bool _policyIsStable;
     private bool _monteCarloDone;
+    private AgentMovements[] _movesForRandoms;
+    private readonly System.Random _random = new();
 
     private void Start()
     {
@@ -85,6 +87,7 @@ public class MonteCarlo : MonoBehaviour
         _states = new List<State> { _gameState.CopyState(_gameState.GetState()) };
         _generation = new List<Tuple<State, AgentMovements>>();
         _genResults = new List<MonteCarloStruct> { new (_gameState.CopyState(_states[0])) };
+        _movesForRandoms = new[] { AgentMovements.Up, AgentMovements.Down, AgentMovements.Left, AgentMovements.Right };
     }
 
     private void InitRandomPolicy()
@@ -199,9 +202,7 @@ public class MonteCarlo : MonoBehaviour
                 if (Random.Range(0f, 1f) > epsilon)
                     currentMove = GetRandomMove();
                 else
-                {
                     currentMove = GetMovementFromPolicy(currentGameState);
-                }
                 _generation.Add(new Tuple<State, AgentMovements>(_gameState.CopyState(currentGameState), currentMove));
                 CheckStateInResultList(currentGameState);
                 AddState(currentGameState);
@@ -235,9 +236,27 @@ public class MonteCarlo : MonoBehaviour
         }
     }
 
-    private AgentMovements GetRandomMove()
+    private AgentMovements GetRandomMove(bool findNewState = false)
     {
-        return (AgentMovements)Random.Range(0, (int)AgentMovements.Length);
+        var currentMove = (AgentMovements)Random.Range(0, (int)AgentMovements.Length);
+        if (!findNewState || _generation.Count <= 0) return currentMove;
+        _random.ShuffleArray(_movesForRandoms);
+        for (var i = 0; i < (int)AgentMovements.Length; i++)
+        {
+            currentMove = (AgentMovements)i;
+            var newState = _gameState.CheckMove(currentMove, _generation.Last().Item1);
+            var stateExist = false;
+            foreach (var (state, move) in _generation)
+            {
+                if (newState != state) continue;
+                stateExist = true;
+                break;
+            }
+
+            if (!stateExist)
+                break;
+        }
+        return currentMove;
     }
 
     private IEnumerator MoveAgentFromPolicy()
