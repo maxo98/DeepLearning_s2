@@ -273,7 +273,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 356371618}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b25d9d520ceeb845a7591f4fe90eeff, type: 3}
   m_Name: 
@@ -281,7 +281,7 @@ MonoBehaviour:
   gameManager: {fileID: 703851088}
   isExploringStart: 0
   isEveryVisit: 1
-  isOnPolicy: 0
+  isOnPolicy: 1
   maxEpochs: 500
   maxMovements: 100
   maxIteration: 100
@@ -292,7 +292,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 356371618}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e0b1bf2a25ec7e4691a5e0fcdf100af, type: 3}
   m_Name: 
@@ -697,7 +697,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6246667637747118506, guid: 9ba5fe9373cbbe74595153c0769d6365, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6246667637747118506, guid: 9ba5fe9373cbbe74595153c0769d6365, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1049,7 +1049,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b0a9c34f8ad2c4c49988cbeb282fceec, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.99979305
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b0a9c34f8ad2c4c49988cbeb282fceec, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1057,7 +1057,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b0a9c34f8ad2c4c49988cbeb282fceec, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.0017805
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b0a9c34f8ad2c4c49988cbeb282fceec, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1118,7 +1118,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 212276556419522965, guid: 2fd922a5b723ecf48b5241f8197a3802, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 212276556419522965, guid: 2fd922a5b723ecf48b5241f8197a3802, type: 3}
       propertyPath: m_LocalRotation.w

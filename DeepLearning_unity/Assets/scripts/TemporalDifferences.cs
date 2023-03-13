@@ -1,7 +1,5 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -156,8 +154,8 @@ public class TemporalDifferences : MonoBehaviour
                 SetPolicyValue(currentGameState, currentMove, currentValue);
                 currentGameState = nextState;
                 currentMove = nextMove;
-                if (!_gameState.CheckGameOver(currentGameState)) continue;
-                break;
+                if (_gameState.CheckGameOver(currentGameState))
+                    break;
             }
         }
     }

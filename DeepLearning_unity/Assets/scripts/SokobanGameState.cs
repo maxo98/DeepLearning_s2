@@ -129,7 +129,7 @@ public class SokobanGameState : MonoBehaviour, IGameState
         _grid[x, y] = new Tuple<BlockData, float>(_grid[x, y].Item1, reward);
     }
 
-    public BlockStates GetBlockState(int x, int y)
+    private BlockStates GetBlockState(int x, int y)
     {
         return _grid[x, y].Item1.state;
     }

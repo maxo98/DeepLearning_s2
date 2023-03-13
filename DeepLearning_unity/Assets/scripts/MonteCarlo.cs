@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -31,7 +30,6 @@ public class MonteCarlo : MonoBehaviour
 
     [SerializeField] private bool isExploringStart;
 
-    [SerializeField] private bool isEveryVisit;
     [SerializeField] private bool isOnPolicy;
 
     [SerializeField] private int maxEpochs = 1000;
@@ -269,9 +267,9 @@ public class MonteCarlo : MonoBehaviour
             currentMove = (AgentMovements)i;
             var newState = _gameState.CheckMove(currentMove, _generation.Last().Item1);
             var stateExist = false;
-            foreach (var (state, move) in _generation)
+            foreach (var (state, _) in _generation)
             {
-                if (newState != state) continue;
+                if (!newState.Equals(state)) continue;
                 stateExist = true;
                 break;
             }
