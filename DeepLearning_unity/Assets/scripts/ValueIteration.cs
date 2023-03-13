@@ -6,25 +6,15 @@ using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-enum Action
+public class ValueIteration : MonoBehaviour
 {
-    Left,
-    Right,
-    Top,
-    Bottom,
-    Stop
-}
-public class PolicyIteration : MonoBehaviour
-{
-    [Header("Press P to calculate policy")]
-    [Header("Press M to Move Player")]
     [SerializeField] GameObject[] map;
     [SerializeField] GameObject PlayerPref;
     [SerializeField] int playerPos;
     [SerializeField] int mapWidth;
     [SerializeField] int mapHeight;
     [SerializeField] int victory;
-    [SerializeField] int[] rewards; 
+    [SerializeField] int[] rewards;
     [SerializeField] float[] valueInstantT;
     [SerializeField] float[] valueT1;
     [SerializeField] Action[] action;
@@ -128,7 +118,7 @@ public class PolicyIteration : MonoBehaviour
                 PolicyEvaluation();
                 PolicyImprovement();
             }
-            Debug.Log("policy : OK");
+
             //StartCoroutine(MovePlayer());
         }
 
