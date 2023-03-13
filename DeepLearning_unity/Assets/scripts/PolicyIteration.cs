@@ -151,6 +151,7 @@ public class PolicyIteration : MonoBehaviour
                 delta = MathF.Max(delta, Mathf.Abs(valueInstantT[i] - valueT1[i]));
                 valueInstantT = valueT1;
             }
+            Debug.Log("Iteration Policy Evaluation");
         }
     }
 
@@ -227,6 +228,7 @@ public class PolicyIteration : MonoBehaviour
     {
         try
         {
+            Debug.Log("Improvement");
             var actionToDo = movements[movement];
             var reward = valueInstantT[index + actionToDo];
             return reward;

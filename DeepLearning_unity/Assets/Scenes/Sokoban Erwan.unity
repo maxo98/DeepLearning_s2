@@ -6126,7 +6126,7 @@ MonoBehaviour:
   valueT1: []
   action: 
   offset: {x: 0, y: 0, z: 0}
-  gamma: 0.7
+  gamma: 0.6
   passageNumber: 
   returns: 
 --- !u!4 &1395844936
@@ -6231,7 +6231,7 @@ MonoBehaviour:
   valueT1: []
   action: 
   offset: {x: 0, y: 1, z: 0}
-  gamma: 0.7
+  gamma: 0.2
   passageNumber: 
   returns: 
 --- !u!1 &1432315811
