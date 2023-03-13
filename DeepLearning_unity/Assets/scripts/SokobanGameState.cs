@@ -36,7 +36,17 @@ public class SokobanState : State
         }
         return true;
     }
-    
+
+    public override bool Equals(object other)
+    {
+        return Equals((SokobanState) other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(base.GetHashCode(), _cratesPosition);
+    }
+
     public int GetCratesCount()
     {
         return _cratesPosition.Count;
@@ -86,14 +96,17 @@ public class SokobanGameState : MonoBehaviour, IGameState
 
     public float GetReward(State state, State otherState)
     {
-        if (CompareStates(state, otherState))
+        if (otherState != null && CompareStates(state, otherState))
              return 0f;
         var reward = GetRewardForCrates((SokobanState)state);
-        var otherReward = GetRewardForCrates((SokobanState)otherState);
-        if (reward < otherReward)
-            reward = -1f;
-        else if (reward.Equals(otherReward))
-            reward = 0f;
+        if(otherState != null)
+        {
+            var otherReward = GetRewardForCrates((SokobanState)otherState);
+            if (reward < otherReward)
+                reward = -1f;
+            else if (reward.Equals(otherReward))
+                reward = 0f;
+        }
         if (reward.Equals(((SokobanState)state).GetCratesCount()))
             reward *= 2;
         return reward;

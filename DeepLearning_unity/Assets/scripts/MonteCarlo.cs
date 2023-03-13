@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -31,6 +32,7 @@ public class MonteCarlo : MonoBehaviour
     [SerializeField] private bool isExploringStart;
 
     [SerializeField] private bool isEveryVisit;
+    [SerializeField] private bool isOnPolicy;
 
     [SerializeField] private int maxEpochs = 1000;
     [SerializeField] private  int maxMovements = 100;
@@ -61,18 +63,27 @@ public class MonteCarlo : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.A))
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             InitStates();
             InitRandomPolicy();
             _monteCarloDone = false;
-            for (var i = 1; i <= maxIteration; i++)
+            if (!isOnPolicy)
             {
-                Debug.Log("iteration : " + i);
-                EveryVisitMcPrediction();
-                GenerateNewPolicy();
-                if (_policyIsStable)
-                    break;
+                for (var i = 1; i <= maxIteration; i++)
+                {
+                    Debug.Log("iteration : " + i);
+                    EveryVisitMcPrediction();
+                    GenerateNewPolicy();
+                    if (_policyIsStable)
+                        break;
+                }
             }
-            Debug.Log("Iterations done");
+            else
+            {
+                EveryVisitMcPrediction();
+            }
+            var elapsed = watch.Elapsed;
+            Debug.Log("Iterations done in " + elapsed.TotalSeconds);
             _monteCarloDone = true;
         }
 
@@ -162,27 +173,32 @@ public class MonteCarlo : MonoBehaviour
         _policyIsStable = true;
         foreach (var state in _states)
         {
-            var maxValue = 0f;
-            var curMove = AgentMovements.Up;
-            var result = GetResultsFromState(state);
-            for (var i = 0; i < (int) AgentMovements.Length; i++)
-            {
-                var curVal = result.VsForState[i];
-                if (curVal < maxValue) continue;
-                maxValue = curVal;
-                curMove = (AgentMovements) i;
-            }
-            for(var i = 0; i < _policy.Count; i++)
-            {
-                var (policyState, move) = _policy[i];
-                if (!_gameState.CompareStates(policyState, state)) continue;
-                if (move == curMove) break;
-                _policyIsStable = false;
-                _policy[i] = new Tuple<State, AgentMovements>(policyState, curMove);
-                break;
-            }
+            UpdatePolicyForState(state);
         }
         ClearResults();
+    }
+
+    private void UpdatePolicyForState(State state)
+    {
+        var maxValue = 0f;
+        var curMove = AgentMovements.Up;
+        var result = GetResultsFromState(state);
+        for (var i = 0; i < (int) AgentMovements.Length; i++)
+        {
+            var curVal = result.VsForState[i];
+            if (curVal < maxValue) continue;
+            maxValue = curVal;
+            curMove = (AgentMovements) i;
+        }
+        for(var i = 0; i < _policy.Count; i++)
+        {
+            var (policyState, move) = _policy[i];
+            if (!_gameState.CompareStates(policyState, state)) continue;
+            if (move == curMove) break;
+            _policyIsStable = false;
+            _policy[i] = new Tuple<State, AgentMovements>(policyState, curMove);
+            break;
+        }
     }
 
     private void EveryVisitMcPrediction()
@@ -224,9 +240,16 @@ public class MonteCarlo : MonoBehaviour
                 g += _gameState.GetReward(_generation[t+1].Item1, _generation[t].Item1);
                 result.ReturnsForState[indexMove] = g + returns;
                 result.NForState[indexMove] = n+1;
+                if (!isOnPolicy) continue;
+                for (var i = 0; i < (int) AgentMovements.Length; i++)
+                {
+                    UpdateVsForStateAndMove(state, (AgentMovements) i);
+                }
+                UpdatePolicyForState(state);
             }
         }
 
+        if (isOnPolicy) return;
         foreach (var state in _states)
         {
             for (var i = 0; i < (int) AgentMovements.Length; i++)

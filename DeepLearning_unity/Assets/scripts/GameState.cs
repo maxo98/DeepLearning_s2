@@ -24,7 +24,7 @@ public enum AgentMovements
 
 public class State
 {
-    public Vector2Int AgentPosition { get; protected set; }
+    public Vector2Int AgentPosition { get; private set; }
 
     public State(Vector3 agent)
     {
@@ -59,6 +59,17 @@ public class State
     public bool Equals(State state)
     {
         return AgentPosition.x == state.AgentPosition.x && AgentPosition.y == state.AgentPosition.y;
+    }
+
+    public override bool Equals(object other)
+    {
+        var state = (State)other;
+        return state != null && AgentPosition.x == state.AgentPosition.x && AgentPosition.y == state.AgentPosition.y;
+    }
+
+    public override int GetHashCode()
+    {
+        return AgentPosition.GetHashCode();
     }
 }
     

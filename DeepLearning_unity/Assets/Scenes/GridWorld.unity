@@ -4679,8 +4679,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2059034887}
   - component: {fileID: 2059034886}
+  - component: {fileID: 2059034888}
   m_Layer: 0
-  m_Name: MonteCarlo
+  m_Name: DeepLearning
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4693,7 +4694,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2059034885}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b25d9d520ceeb845a7591f4fe90eeff, type: 3}
   m_Name: 
@@ -4701,6 +4702,7 @@ MonoBehaviour:
   gameManager: {fileID: 1395844934}
   isExploringStart: 0
   isEveryVisit: 1
+  isOnPolicy: 1
   maxEpochs: 1200
   maxMovements: 100
   maxIteration: 50
@@ -4719,6 +4721,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2059034888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2059034885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e0b1bf2a25ec7e4691a5e0fcdf100af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameManager: {fileID: 1395844934}
+  isExploringStart: 0
+  isQLearning: 0
+  maxEpochs: 700
+  maxMovements: 150
+  gamma: 0.5
+  alpha: 0.5
 --- !u!114 &2083609740 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6246667637747118486, guid: 9ba5fe9373cbbe74595153c0769d6365, type: 3}
